@@ -2,6 +2,7 @@
 using System.IO;
 using BlazorConnect4.Model;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace BlazorConnect4.AIModels
 {
@@ -59,6 +60,28 @@ namespace BlazorConnect4.AIModels
             // Eftersom generatorn inte var serialiserad.
             temp.generator = new Random();
             return temp;
+        }
+    }
+
+
+
+    [Serializable]
+    public class QAgent : AI
+    {
+        public QAgent()
+        {}
+
+        // TODO: Create constructor that create agent that reads from file.
+
+        public override int SelectMove(Cell[,] grid)
+        {
+            return 5;
+        }
+
+        public static QAgent ConstructFromFile(string fileName)
+        {
+            QAgent tempAgent = (QAgent)(FromFile(fileName));
+            return tempAgent;
         }
     }
 }

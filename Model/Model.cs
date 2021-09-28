@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using BlazorConnect4.AIModels;
 
@@ -41,6 +42,10 @@ namespace BlazorConnect4.Model
             }
         }
 
+        public int GetHashCode(int hashCode)
+        {
+            return hashCode;
+        }
 
     }
 
@@ -58,7 +63,6 @@ namespace BlazorConnect4.Model
         {
             Reset("Human");
         }
-
 
 
         // Reset the game and creats the opponent.
@@ -89,15 +93,24 @@ namespace BlazorConnect4.Model
             }
             else if (playAgainst == "Q1")
             {
-                ai = new RandomAI();
+                if (File.Exists("Data/Q1.bin"))
+                {
+                    ai = QAgent.ConstructFromFile("Data/Q1.bin");
+                }
+                else
+                {
+                    ai = new QAgent();
+                    ai.ToFile("Data/Q1.bin");
+                }
+                
             }
             else if (playAgainst == "Q2")
             {
-                ai = new RandomAI();
+                ai = new RandomAI(); //TODO: change to medium AI
             }
             else if (playAgainst == "Q3")
             {
-                ai = new RandomAI();
+                ai = new RandomAI(); //TODO: change to hard AI
             }
 
         }
@@ -236,10 +249,41 @@ namespace BlazorConnect4.Model
                         break;
                     }
                 }
-                return PlayNext();
+                PrintGrid();
+                return PlayNext(); 
             }
 
             return false;
+        }
+
+        public void PrintGrid()
+        {
+            Console.WriteLine("-------------------------");
+
+            for (int row = 0; row <= 5; row++)
+            {
+                string rowString = "[";
+
+                for (int col = 0; col <= 6; col++)
+                {
+                    var cellColor = Board.Grid[col, row].Color;
+                    if (cellColor == CellColor.Red)
+                    {
+                        rowString += "1, ";
+                    } 
+                    else if (cellColor == CellColor.Yellow)
+                    {
+                        rowString += "2, ";
+                    }
+                    else
+                    {
+                        rowString += "0, ";
+                    }
+                }
+
+                rowString += "]";
+                Console.WriteLine($"{rowString}");
+            }
         }
 
 
