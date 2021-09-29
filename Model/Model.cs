@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using BlazorConnect4.AIModels;
@@ -42,11 +43,40 @@ namespace BlazorConnect4.Model
             }
         }
 
-        public int GetHashCode(int hashCode)
+        public override int GetHashCode()
         {
-            return hashCode;
+            var boardOfInt = new int[7,6];
+            int hash = 0;
+
+            for (int col=0; col<=6; col++)
+            {
+                for (int row=0; row<=5; row++)
+                {
+                    var cell = Grid[col, row];
+
+                    if (cell.Color == CellColor.Blank)
+                    {
+                        boardOfInt[col, row] = 0;
+                        hash += 1 * (row + (7 * col));
+                    }
+                    else if (cell.Color == CellColor.Red)
+                    {
+                        boardOfInt[col, row] = 1;
+                        hash += 2 * (row + (7 * col));
+                    }
+                    else
+                    {
+                        boardOfInt[col, row] = 2;
+                        hash += 3 * (row + (7 * col));
+                    }
+                }
+            }
+
+            return hash;
         }
 
+            
+        //TODO: Override Equals().
     }
 
 
@@ -249,7 +279,9 @@ namespace BlazorConnect4.Model
                         break;
                     }
                 }
+                //Test hash and print functions.
                 PrintGrid();
+                Console.WriteLine($"HashCode: {Board.GetHashCode()}");
                 return PlayNext(); 
             }
 

@@ -68,10 +68,24 @@ namespace BlazorConnect4.AIModels
     [Serializable]
     public class QAgent : AI
     {
-        public QAgent()
-        {}
+        double rewardAmount;
+        public QAgent() { }
 
-        // TODO: Create constructor that create agent that reads from file.
+        public QAgent(string fileName)
+        {
+            // TODO: Create constructor that create agent that reads from file.
+            Console.WriteLine(fileName);
+        }
+
+        //TODO: Initialize Q-Table.
+       public static void defineEnvironmentStates()
+        {
+            var possibleStates = (1.6 * (10 ^ 13)); // Different states for the connect4 gameBoard.
+        }
+        
+        //TODO: Define actions.
+
+        //TODO: Define rewards.
 
         public override int SelectMove(Cell[,] grid)
         {
@@ -82,6 +96,13 @@ namespace BlazorConnect4.AIModels
         {
             QAgent tempAgent = (QAgent)(FromFile(fileName));
             return tempAgent;
+        }
+
+        public void trainAgents()
+        {
+            var epsilon = 0.9;
+            var discountFactor = 0.9;
+            var learningRate = 0.9;
         }
     }
 }
