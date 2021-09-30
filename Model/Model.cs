@@ -45,7 +45,6 @@ namespace BlazorConnect4.Model
 
         public override int GetHashCode()
         {
-            var boardOfInt = new int[7,6];
             int hash = 0;
 
             for (int col=0; col<=6; col++)
@@ -56,17 +55,14 @@ namespace BlazorConnect4.Model
 
                     if (cell.Color == CellColor.Blank)
                     {
-                        boardOfInt[col, row] = 0;
                         hash += 1 * (row + (7 * col));
                     }
                     else if (cell.Color == CellColor.Red)
                     {
-                        boardOfInt[col, row] = 1;
                         hash += 2 * (row + (7 * col));
                     }
                     else
                     {
-                        boardOfInt[col, row] = 2;
                         hash += 3 * (row + (7 * col));
                     }
                 }
@@ -75,8 +71,29 @@ namespace BlazorConnect4.Model
             return hash;
         }
 
-            
-        //TODO: Override Equals().
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+            {
+                return false;
+            }
+
+            GameBoard otherGameBoard = (GameBoard)obj;
+            Cell[,] otherGrid = otherGameBoard.Grid;
+
+            for (int col=0; col<=6; col++)
+            {
+                for (int row=0; row<=5; row++)
+                {
+                    if (Grid[col, row].Color != otherGrid[col, row].Color)
+                    {
+                        return false;
+                    }
+                }
+            }
+           
+            return true;
+        }
     }
 
 
