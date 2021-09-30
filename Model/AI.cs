@@ -10,7 +10,7 @@ namespace BlazorConnect4.AIModels
     public abstract class AI
     {
         // Funktion för att bestämma vilken handling som ska genomföras.
-        public abstract int SelectMove(Cell[,] grid);
+        public abstract int SelectMove(GameBoard board); // change from SelectMove(Cell[,] grid) 
 
         // Funktion för att skriva till fil.
         public virtual void ToFile(string fileName)
@@ -49,7 +49,7 @@ namespace BlazorConnect4.AIModels
             generator = new Random();
         }
 
-        public override int SelectMove(Cell[,] grid)
+        public override int SelectMove(GameBoard board)
         {
             return generator.Next(7);
         }
@@ -64,32 +64,98 @@ namespace BlazorConnect4.AIModels
     }
 
 
+    public class Action
+    {
+        public int action;
+        public int actionValue;
+
+        public Action(int column)
+        {
+            action = column;
+            actionValue = 0;
+        }
+    }
+    
 
     [Serializable]
     public class QAgent : AI
     {
-        double rewardAmount;
-        public QAgent() { }
+        [NonSerialized] Random generator;
+        Dictionary<int, List<Action>> QTable;
+        int rewardAmount;
+
+        public QAgent() 
+        {
+            generator = new Random();
+            QTable = new Dictionary<int, List<Action>>();
+            rewardAmount = 0;
+        }
 
         public QAgent(string fileName)
         {
-            // TODO: Create constructor that create agent that reads from file.
-            Console.WriteLine(fileName);
+            generator = new Random();
+            QTable = new Dictionary<int, List<Action>>(); // Read from file?
+            rewardAmount = 0;
         }
 
         //TODO: Initialize Q-Table.
-       public static void defineEnvironmentStates()
-        {
-            var possibleStates = (1.6 * (10 ^ 13)); // Different states for the connect4 gameBoard.
-        }
-        
+      
         //TODO: Define actions.
 
         //TODO: Define rewards.
 
-        public override int SelectMove(Cell[,] grid)
+        public override int SelectMove(GameBoard board)
         {
-            return 5;
+            int stateOfBoard = board.GetHashCode();
+            int move = generator.Next(7);
+
+            if (QTable.ContainsKey(stateOfBoard))
+            {
+                // State exists in QTable.
+                Console.WriteLine($"State: {stateOfBoard} exists in QTable!");
+                move = CheckBestPossibleMove(stateOfBoard);
+            } 
+            else
+            {
+                // State do not exist in QTable --> Add new state.
+                Console.WriteLine($"Adding new state: {stateOfBoard} into QTable");
+                AddNewState(stateOfBoard);
+            }
+
+            return move;
+        }
+
+        public int CheckBestPossibleMove(int state)
+        {
+            Action bestAction = new Action(generator.Next(7));
+            bestAction.actionValue = int.MinValue;
+
+            List<Action> currentStateActions = QTable[state];
+
+            for (int i=0; i<= currentStateActions.Count; i++)
+            {
+                Action action = currentStateActions[i];
+
+                if (bestAction.actionValue <= action.actionValue)
+                {
+                    bestAction.action = action.action;
+                    bestAction.actionValue = action.actionValue;
+                }
+            }
+
+            return bestAction.action;
+        }
+
+        public void AddNewState(int state)
+        {
+            List<Action> listOfActions = new List<Action>();
+
+            for (int i = 0; i <= 6; i++) // Initiate valid actions within the game board.
+            {
+                listOfActions.Add(new Action(i));
+            }
+
+            QTable.Add(state, listOfActions);
         }
 
         public static QAgent ConstructFromFile(string fileName)
@@ -98,11 +164,13 @@ namespace BlazorConnect4.AIModels
             return tempAgent;
         }
 
-        public void trainAgents()
+        public static void trainAgents()
         {
             var epsilon = 0.9;
             var discountFactor = 0.9;
             var learningRate = 0.9;
+
+            Console.WriteLine($"{epsilon}, {discountFactor}, {learningRate}");
         }
     }
 }

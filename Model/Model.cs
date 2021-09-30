@@ -138,11 +138,12 @@ namespace BlazorConnect4.Model
                 }
                 
             }
-            else if (playAgainst == "Q1")
+            else if (playAgainst == "Q1") // Easy AI.
             {
                 if (File.Exists("Data/Q1.bin"))
                 {
-                    ai = QAgent.ConstructFromFile("Data/Q1.bin");
+                    //ai = QAgent.ConstructFromFile("Data/Q1.bin");
+                    ai = new QAgent();
                 }
                 else
                 {
@@ -297,7 +298,7 @@ namespace BlazorConnect4.Model
                     }
                 }
                 //Test hash and print functions.
-                PrintGrid();
+                //PrintGrid();
                 Console.WriteLine($"HashCode: {Board.GetHashCode()}");
                 return PlayNext(); 
             }
@@ -350,11 +351,11 @@ namespace BlazorConnect4.Model
 
             if (ai != null && Player == CellColor.Yellow)
             {
-                int move = ai.SelectMove(Board.Grid);
+                int move = ai.SelectMove(Board);
 
                 while (! IsValid(move))
                 {
-                    move = ai.SelectMove(Board.Grid);
+                    move = ai.SelectMove(Board);
                 }
 
                 return Play(move);
