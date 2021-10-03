@@ -104,6 +104,7 @@ namespace BlazorConnect4.Model
         public bool active;
         public String message;
         private AI ai;
+        private AI aiTwo;
 
 
         public GameEngine()
@@ -142,8 +143,7 @@ namespace BlazorConnect4.Model
             {
                 if (File.Exists("Data/Q1.bin"))
                 {
-                    //ai = QAgent.ConstructFromFile("Data/Q1.bin");
-                    ai = new QAgent();
+                    ai = new QAgent("Data/Q1.bin");
                 }
                 else
                 {
@@ -299,7 +299,7 @@ namespace BlazorConnect4.Model
                 }
                 //Test hash and print functions.
                 //PrintGrid();
-                Console.WriteLine($"HashCode: {Board.GetHashCode()}");
+                //Console.WriteLine($"HashCode: {Board.GetHashCode()}");
                 return PlayNext(); 
             }
 

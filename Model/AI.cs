@@ -9,12 +9,17 @@ namespace BlazorConnect4.AIModels
     [Serializable]
     public abstract class AI
     {
+        string savedFileName;
+
         // Funktion för att bestämma vilken handling som ska genomföras.
         public abstract int SelectMove(GameBoard board); // change from SelectMove(Cell[,] grid) 
 
         // Funktion för att skriva till fil.
         public virtual void ToFile(string fileName)
         {
+            Console.WriteLine("Saving data to file...");
+            savedFileName = fileName;
+
             using (Stream stream = File.Open(fileName, FileMode.Create))
             {
                 var bformatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
@@ -25,6 +30,8 @@ namespace BlazorConnect4.AIModels
         // Funktion för att att läsa från fil.
         protected static AI FromFile(string fileName)
         {
+            Console.WriteLine("Fetching agent from saved file...");
+
             AI returnAI;
             using (Stream stream = File.Open(fileName, FileMode.Open))
             {
@@ -83,32 +90,36 @@ namespace BlazorConnect4.AIModels
         [NonSerialized] Random generator;
         Dictionary<int, List<Action>> QTable;
         int rewardAmount;
+        int amountOfPlays;
 
         public QAgent() 
         {
-            generator = new Random();
             QTable = new Dictionary<int, List<Action>>();
+            generator = new Random();
             rewardAmount = 0;
+            amountOfPlays = 0;
         }
 
         public QAgent(string fileName)
         {
+            QAgent tempAgent = (QAgent)(FromFile(fileName));
+
+            // Copy values from saved file.
             generator = new Random();
-            QTable = new Dictionary<int, List<Action>>(); // Read from file?
-            rewardAmount = 0;
+            QTable = tempAgent.QTable;
+            rewardAmount = tempAgent.rewardAmount;
+            amountOfPlays = tempAgent.amountOfPlays;
         }
-
-        //TODO: Initialize Q-Table.
-      
-        //TODO: Define actions.
-
-        //TODO: Define rewards.
 
         public override int SelectMove(GameBoard board)
         {
             int stateOfBoard = board.GetHashCode();
             int move = generator.Next(7);
 
+            amountOfPlays += 1;
+            Console.WriteLine($"Amount of plays: {amountOfPlays}");
+            
+            
             if (QTable.ContainsKey(stateOfBoard))
             {
                 // State exists in QTable.
@@ -121,18 +132,20 @@ namespace BlazorConnect4.AIModels
                 Console.WriteLine($"Adding new state: {stateOfBoard} into QTable");
                 AddNewState(stateOfBoard);
             }
+            
 
             return move;
         }
 
+        /*
+         * Returns the best possible move for a given state.
+         */
         public int CheckBestPossibleMove(int state)
         {
-            Action bestAction = new Action(generator.Next(7));
-            bestAction.actionValue = int.MinValue;
-
+            Action bestAction = new Action(int.MinValue);
             List<Action> currentStateActions = QTable[state];
 
-            for (int i=0; i<= currentStateActions.Count; i++)
+            for (int i = 0; i <= currentStateActions.Count; i++)
             {
                 Action action = currentStateActions[i];
 
@@ -150,7 +163,7 @@ namespace BlazorConnect4.AIModels
         {
             List<Action> listOfActions = new List<Action>();
 
-            for (int i = 0; i <= 6; i++) // Initiate valid actions within the game board.
+            for (int i = 0; i <= 6; i++) // Initiate all valid actions within the game board.
             {
                 listOfActions.Add(new Action(i));
             }
@@ -158,18 +171,13 @@ namespace BlazorConnect4.AIModels
             QTable.Add(state, listOfActions);
         }
 
-        public static QAgent ConstructFromFile(string fileName)
-        {
-            QAgent tempAgent = (QAgent)(FromFile(fileName));
-            return tempAgent;
-        }
-
         public static void trainAgents()
         {
-            var epsilon = 0.9;
-            var discountFactor = 0.9;
-            var learningRate = 0.9;
+            double epsilon = 0.9;
+            double discountFactor = 0.9;
+            double learningRate = 0.9;
 
+            Console.WriteLine("Training Agents...");
             Console.WriteLine($"{epsilon}, {discountFactor}, {learningRate}");
         }
     }
