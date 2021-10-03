@@ -143,11 +143,11 @@ namespace BlazorConnect4.Model
             {
                 if (File.Exists("Data/Q1.bin"))
                 {
-                    ai = new QAgent("Data/Q1.bin");
+                    ai = new QAgent("Data/Q1.bin", this);
                 }
                 else
                 {
-                    ai = new QAgent();
+                    ai = new QAgent(this);
                     ai.ToFile("Data/Q1.bin");
                 }
                 
@@ -166,7 +166,7 @@ namespace BlazorConnect4.Model
 
 
 
-        private bool IsValid(int col)
+        public bool IsValid(int col)
         {
             return Board.Grid[col, 0].Color == CellColor.Blank;
         }

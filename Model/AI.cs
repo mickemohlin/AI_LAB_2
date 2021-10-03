@@ -74,7 +74,7 @@ namespace BlazorConnect4.AIModels
     public class Action
     {
         public int action;
-        public int actionValue;
+        public double actionValue;
 
         public Action(int column)
         {
@@ -89,22 +89,25 @@ namespace BlazorConnect4.AIModels
     {
         [NonSerialized] Random generator;
         Dictionary<int, List<Action>> QTable;
+        GameEngine game;
         int rewardAmount;
         int amountOfPlays;
 
-        public QAgent() 
+        public QAgent(GameEngine gameEngine) 
         {
             QTable = new Dictionary<int, List<Action>>();
+            game = gameEngine;
             generator = new Random();
             rewardAmount = 0;
             amountOfPlays = 0;
         }
 
-        public QAgent(string fileName)
+        public QAgent(string fileName, GameEngine gameEngine)
         {
             QAgent tempAgent = (QAgent)(FromFile(fileName));
 
             // Copy values from saved file.
+            game = gameEngine;
             generator = new Random();
             QTable = tempAgent.QTable;
             rewardAmount = tempAgent.rewardAmount;
@@ -132,9 +135,37 @@ namespace BlazorConnect4.AIModels
                 Console.WriteLine($"Adding new state: {stateOfBoard} into QTable");
                 AddNewState(stateOfBoard);
             }
+
+            double reward = GetReward(move);
+
+            Console.WriteLine(reward);
+
+            BellmanEquation(0.1, stateOfBoard, move);
             
 
             return move;
+        }
+
+        public double GetReward(int move)
+        {
+
+            if(!game.IsValid(move))
+            {
+                return -0.1;
+            } 
+           /* else if (game.IsWin(move, move)) // Wrong parameters
+            {
+                return 1;
+            }
+           */
+            return -1;
+        }
+
+        public void BellmanEquation(double reward, int state, int action)
+        {
+            double discountFactor = 0.9;
+
+            QTable[state][action].actionValue = reward + (discountFactor * QTable[state][action].actionValue);
         }
 
         /*
