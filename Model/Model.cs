@@ -103,8 +103,8 @@ namespace BlazorConnect4.Model
         public CellColor Player { get; set;}
         public bool active;
         public String message;
-        private AI ai;
-        private AI aiTwo;
+        public AI ai;
+        private QAgent playerAI;
 
 
         public GameEngine()
@@ -160,13 +160,28 @@ namespace BlazorConnect4.Model
             {
                 ai = new RandomAI(); //TODO: change to hard AI
             }
+        }
 
+        public void Train(string agent)
+        {
+            if (agent == "Q1")
+            {
+                if (File.Exists("Data/Q1.bin"))
+                {
+                    QAgent.TrainAgents(10, "Data/Q1.bin");
+                }
+                else
+                {
+                    Console.WriteLine("File do not exist!");
+                }
+            }
+            
+            //TODO: Extend function.
         }
 
 
 
-
-        private bool IsValid(int col)
+        public bool IsValid(int col)
         {
             return Board.Grid[col, 0].Color == CellColor.Blank;
         }
@@ -190,7 +205,6 @@ namespace BlazorConnect4.Model
             bool win = false;
             int score = 0;
             
-
             // Check down
             if (row < 3)
             {
@@ -297,49 +311,16 @@ namespace BlazorConnect4.Model
                         break;
                     }
                 }
-                //Test hash and print functions.
-                //PrintGrid();
-                //Console.WriteLine($"HashCode: {Board.GetHashCode()}");
+
                 return PlayNext(); 
             }
 
             return false;
         }
 
-        public void PrintGrid()
-        {
-            Console.WriteLine("-------------------------");
-
-            for (int row = 0; row <= 5; row++)
-            {
-                string rowString = "[";
-
-                for (int col = 0; col <= 6; col++)
-                {
-                    var cellColor = Board.Grid[col, row].Color;
-                    if (cellColor == CellColor.Red)
-                    {
-                        rowString += "1, ";
-                    } 
-                    else if (cellColor == CellColor.Yellow)
-                    {
-                        rowString += "2, ";
-                    }
-                    else
-                    {
-                        rowString += "0, ";
-                    }
-                }
-
-                rowString += "]";
-                Console.WriteLine($"{rowString}");
-            }
-        }
-
 
         private bool PlayNext()
         {
-
             if (Player == CellColor.Red)
             {
                 Player = CellColor.Yellow;
