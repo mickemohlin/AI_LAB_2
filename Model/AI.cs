@@ -71,7 +71,7 @@ namespace BlazorConnect4.AIModels
     public class Action
     {
         public int action;
-        public int actionValue;
+        public double actionValue;
 
         public Action(int column)
         {
@@ -85,19 +85,21 @@ namespace BlazorConnect4.AIModels
     public class QAgent : AI
     {
         [NonSerialized] Random generator;
-        Dictionary<int, List<Action>> QTable;
+        [NonSerialized] Dictionary<int, List<Action>> QTable; // TODO: Make dictionary serializable.
+        [NonSerialized] GameEngine game;
         int rewardAmount;
         public int gamesPlayed;
 
-        public QAgent() 
+        public QAgent(GameEngine gameEngine) 
         {
             QTable = new Dictionary<int, List<Action>>();
             generator = new Random();
             rewardAmount = 0;
+            game = gameEngine;
             gamesPlayed = 0;
         }
 
-        public QAgent(string fileName)
+        public QAgent(string fileName, GameEngine gameEngine)
         {
             QAgent tempAgent = (QAgent)(FromFile(fileName));
 
@@ -105,6 +107,7 @@ namespace BlazorConnect4.AIModels
             generator = new Random();
             QTable = new Dictionary<int, List<Action>>();
             rewardAmount = tempAgent.rewardAmount;
+            game = gameEngine;
             gamesPlayed = tempAgent.gamesPlayed;
 
             //Console.WriteLine($"Games Played: {gamesPlayed}");
@@ -129,7 +132,37 @@ namespace BlazorConnect4.AIModels
                 AddNewState(stateOfBoard);
             }
 
+            double reward = GetReward(move);
+
+            Console.WriteLine(reward);
+
+            BellmanEquation(0.1, stateOfBoard, move);
+            
+
+
             return move;
+        }
+
+        public double GetReward(int move)
+        {
+
+            if(!game.IsValid(move))
+            {
+                return -0.1;
+            } 
+           /* else if (game.IsWin(move, move)) // Wrong parameters
+            {
+                return 1;
+            }
+           */
+            return -1;
+        }
+
+        public void BellmanEquation(double reward, int state, int action)
+        {
+            double discountFactor = 0.9;
+
+            QTable[state][action].actionValue = reward + (discountFactor * QTable[state][action].actionValue);
         }
 
         /*
@@ -173,22 +206,25 @@ namespace BlazorConnect4.AIModels
         
         public static void TrainAgents(int iterations, string file)
         {
+            Console.WriteLine("Training Agents...");
+
             //double epsilon = 0.9;
             //double discountFactor = 0.9;
             //double learningRate = 0.9;
 
-            QAgent agent = new QAgent(file);
-            RandomAI opponent = new RandomAI();
             GameEngine game;
+            QAgent agent;
 
             for(int i=1; i<=iterations; i++)
             {
                 Console.WriteLine($"Game: {i}");
 
-                game = new GameEngine
+                game = new GameEngine()
                 {
-                    ai = opponent
+                    ai = new RandomAI()
                 };
+
+                agent = new QAgent(file, game);
 
                 while (game.active)
                 {
@@ -210,8 +246,7 @@ namespace BlazorConnect4.AIModels
                 agent.gamesPlayed += 1;
             }
 
-            Console.WriteLine($"Agent Games Played: {agent.gamesPlayed}");
-            agent.ToFile("Data/Q1.bin");
+            Console.WriteLine("Training Finished!");
         }
     }
 }

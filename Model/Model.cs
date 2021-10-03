@@ -104,7 +104,6 @@ namespace BlazorConnect4.Model
         public bool active;
         public String message;
         public AI ai;
-        private QAgent playerAI;
 
 
         public GameEngine()
@@ -143,11 +142,11 @@ namespace BlazorConnect4.Model
             {
                 if (File.Exists("Data/Q1.bin"))
                 {
-                    ai = new QAgent("Data/Q1.bin");
+                    ai = new QAgent("Data/Q1.bin", this);
                 }
                 else
                 {
-                    ai = new QAgent();
+                    ai = new QAgent(this);
                     ai.ToFile("Data/Q1.bin");
                 }
                 
