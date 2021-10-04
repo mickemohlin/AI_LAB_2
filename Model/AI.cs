@@ -167,9 +167,10 @@ namespace BlazorConnect4.AIModels
             double discountFactor = 0.1;
 
             double maxFutureQValue = CheckBestPossibleAction(state).actionValue;
+
             double previousQValue = QTable[state][action].actionValue;
 
-            QTable[state][action].actionValue = previousQValue + learningRate * (reward + (discountFactor * maxFutureQValue) - QTable[state][action].actionValue);
+            QTable[state][action].actionValue = previousQValue + learningRate * (reward + (discountFactor * QTable[state][action].actionValue) - QTable[state][action].actionValue);
         }
 
      
