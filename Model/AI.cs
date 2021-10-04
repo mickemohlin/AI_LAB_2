@@ -167,15 +167,15 @@ namespace BlazorConnect4.AIModels
 
             Console.WriteLine($"AI Reward: {reward}");
 
-            double learningRate = 0.9;
-            double discountFactor = 0.9;
+            double learningRate = 0.20;
+            double discountFactor = 0.10;
 
             int newState = game.Board.GetHashCode();
-            double maxFutureQValue = CheckBestPossibleAction(newState).actionValue;
+            //double maxFutureQValue = CheckBestPossibleAction(newState).actionValue;
 
             double previousQValue = QTable[state][action].actionValue;
 
-            QTable[state][action].actionValue = previousQValue + learningRate * (reward + (discountFactor * maxFutureQValue) - QTable[state][action].actionValue);
+            QTable[state][action].actionValue = previousQValue + learningRate * (reward + (discountFactor * QTable[state][action].actionValue) - QTable[state][action].actionValue);
         }
 
         /*
