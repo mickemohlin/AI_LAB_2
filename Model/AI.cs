@@ -85,9 +85,9 @@ namespace BlazorConnect4.AIModels
     public class QAgent : AI
     {
         [NonSerialized] Random generator;
-        [NonSerialized] Dictionary<int, List<Action>> QTable; // TODO: Make dictionary serializable.
         [NonSerialized] GameEngine game;
-        int rewardAmount;
+        Dictionary<int, List<Action>> QTable; // TODO: Make dictionary serializable.
+        private int rewardAmount;
         public int gamesPlayed;
 
         public QAgent(GameEngine gameEngine) 
@@ -109,66 +109,74 @@ namespace BlazorConnect4.AIModels
             rewardAmount = tempAgent.rewardAmount;
             game = gameEngine;
             gamesPlayed = tempAgent.gamesPlayed;
-
-            //Console.WriteLine($"Games Played: {gamesPlayed}");
         }
 
 
         public override int SelectMove(GameBoard board)
         {
             int stateOfBoard = board.GetHashCode();
-            int move = generator.Next(7);
+            int move = generator.Next(7); // Default value of move set to a random int between 1 and 7.
+
+            Console.WriteLine($"Move: {move} --------------------");
             
             if (QTable.ContainsKey(stateOfBoard))
             {
-                // State exists in QTable.
-                Console.WriteLine($"State: {stateOfBoard} exists in QTable!");
-                move = CheckBestPossibleMove(stateOfBoard);
+                // State exists in QTable --> Choose action with best QValue.
+                //Console.WriteLine($"State: {stateOfBoard} exists in QTable!");
+                Action bestPossibleAction = CheckBestPossibleAction(stateOfBoard);
+                move = bestPossibleAction.action; 
             } 
             else
             {
                 // State do not exist in QTable --> Add new state.
-                Console.WriteLine($"Adding new state: {stateOfBoard} into QTable");
+                //Console.WriteLine($"Adding new state: {stateOfBoard} into QTable");
                 AddNewState(stateOfBoard);
             }
 
+            // 1. Choose action
+            // 2. Perform action
+            // 3. Measure Reward
+            // 4. Evalute new QValue
+
+
             double reward = GetReward(move);
-
-            Console.WriteLine(reward);
-
-            BellmanEquation(0.1, stateOfBoard, move);
-            
-
+            Console.WriteLine($"Reward: {reward}");
+            UpdateQValue(reward, stateOfBoard, move);
 
             return move;
         }
 
         public double GetReward(int move)
         {
-
-            if(!game.IsValid(move))
-            {
+            if (!game.IsValid(move))
                 return -0.1;
-            } 
-           /* else if (game.IsWin(move, move)) // Wrong parameters
+            else
             {
-                return 1;
+                int rowPlacement = game.GetCellPlacement(move);
+
+                if (game.IsWin(move, rowPlacement))
+                    return 1.0;
+                else
+                    return 0; // TODO: Check if loss?
             }
-           */
-            return -1;
+                
         }
 
-        public void BellmanEquation(double reward, int state, int action)
+        public void UpdateQValue(double reward, int state, int action)
         {
-            double discountFactor = 0.9;
+            double learningRate = 0.9;
+            double discountFactor = 0.9;    
+            double maxFutureQValue = CheckBestPossibleAction(state).actionValue;
 
-            QTable[state][action].actionValue = reward + (discountFactor * QTable[state][action].actionValue);
+            double previousQValue = QTable[state][action].actionValue;
+
+            QTable[state][action].actionValue = previousQValue + learningRate * (reward + (discountFactor * maxFutureQValue) - QTable[state][action].actionValue);
         }
 
         /*
          * Returns the best possible move for a given state.
          */
-        public int CheckBestPossibleMove(int state)
+        public Action CheckBestPossibleAction(int state)
         {
             Action bestAction = new Action(generator.Next(7))
             {
@@ -188,7 +196,7 @@ namespace BlazorConnect4.AIModels
                 }
             }
 
-            return bestAction.action;
+            return bestAction;
         }
 
         public void AddNewState(int state)
@@ -209,8 +217,6 @@ namespace BlazorConnect4.AIModels
             Console.WriteLine("Training Agents...");
 
             //double epsilon = 0.9;
-            //double discountFactor = 0.9;
-            //double learningRate = 0.9;
 
             GameEngine game;
             QAgent agent;

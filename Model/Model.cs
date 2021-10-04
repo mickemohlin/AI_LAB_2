@@ -281,7 +281,18 @@ namespace BlazorConnect4.Model
             return win;
         }
 
+        public int GetCellPlacement(int col)
+        {
+            for (int i=5; 0<=i; i--)
+            {
+                if(Board.Grid[col, i].Color == CellColor.Blank)
+                {
+                    return i;
+                }
+            }
 
+            return 0;
+        }
 
 
         public bool Play(int col)
