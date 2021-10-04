@@ -89,24 +89,28 @@ namespace BlazorConnect4.AIModels
     {
         [NonSerialized] Random generator;
         [NonSerialized] GameEngine game;
-        Dictionary<int, List<Action>> QTable; // TODO: Make dictionary serializable.
+        Dictionary<int, List<Action>> QTable;
+        public CellColor cellColor;
 
         public string savedFileName;
         public int rewardAmount;
         public int gamesPlayed;
+        public int lastState;
+        public int lastAction;
 
         // Constructor #1
-        public QAgent(GameEngine gameEngine)
+        public QAgent(GameEngine gameEngine, CellColor color)
         {
             QTable = new Dictionary<int, List<Action>>();
             generator = new Random();
             rewardAmount = 0;
             game = gameEngine;
             gamesPlayed = 0;
+            cellColor = color;
         }
 
         // Constructor #2
-        public QAgent(string fileName, GameEngine gameEngine)
+        public QAgent(string fileName, GameEngine gameEngine, CellColor color)
         {
             QAgent tempAgent = (QAgent)(FromFile(fileName));
 
@@ -117,6 +121,7 @@ namespace BlazorConnect4.AIModels
             game = gameEngine;
             gamesPlayed = tempAgent.gamesPlayed;
             savedFileName = fileName;
+            cellColor = color;
 
             if (QTable == null)
             {
@@ -133,7 +138,7 @@ namespace BlazorConnect4.AIModels
             int stateOfBoard = board.GetHashCode();
             int move = generator.Next(7); // Default value of move set to a random int between 1 and 7.
 
-            Console.WriteLine($"Move: {move}");
+            
 
             if (QTable.ContainsKey(stateOfBoard))
             {
@@ -149,22 +154,18 @@ namespace BlazorConnect4.AIModels
                 AddNewState(stateOfBoard);
             }
 
-            // 1. Choose action
-            // 2. Perform action
+            // 1. Choose action 
+            // 2. Perform action 
             // 3. Measure Reward
             // 4. Evalute new QValue
 
-            
-            double reward = GetReward(move);
-            Console.WriteLine($"Reward: {reward}");
-            UpdateQValue(reward, stateOfBoard, move);
+            // Remember last state and action.
+            lastState = stateOfBoard;
+            lastAction = move;
+
+            Console.WriteLine($"Move: {move}");
 
             return move;
-        }
-
-        public void SimulateOutcome()
-        {
-            // TODO
         }
 
         public double GetReward(int move)
@@ -180,14 +181,19 @@ namespace BlazorConnect4.AIModels
                 else
                     return 0; // TODO: Check if loss?
             }
-
         }
 
         public void UpdateQValue(double reward, int state, int action)
         {
+
+            Console.WriteLine($"reward: {reward}");
+
             double learningRate = 0.9;
             double discountFactor = 0.9;
-            double maxFutureQValue = CheckBestPossibleAction(state).actionValue;
+
+            int newState = game.Board.GetHashCode();
+            Console.WriteLine("Getting new state");
+            double maxFutureQValue = CheckBestPossibleAction(newState).actionValue;
 
             double previousQValue = QTable[state][action].actionValue;
 
@@ -204,21 +210,30 @@ namespace BlazorConnect4.AIModels
                 actionValue = int.MinValue
             };
 
-            List<Action> currentStateActions = QTable[state];
-
-            for (int i = 0; i < currentStateActions.Count; i++)
+            if (QTable.ContainsKey(state))
             {
-                Action action = currentStateActions[i];
+                List<Action> currentStateActions = QTable[state];
 
-                if (bestAction.actionValue <= action.actionValue)
+                for (int i = 0; i < currentStateActions.Count; i++)
                 {
-                    bestAction.action = action.action;
-                    bestAction.actionValue = action.actionValue;
-                }
-            }
+                    Action action = currentStateActions[i];
 
-            return bestAction;
+                    if (bestAction.actionValue <= action.actionValue)
+                    {
+                        bestAction.action = action.action;
+                        bestAction.actionValue = action.actionValue;
+                    }
+                }
+
+                return bestAction;
+            }
+            else
+            {
+                Console.WriteLine("State not found!");
+                return bestAction;
+            }  
         }
+
 
         public void AddNewState(int state)
         {
@@ -233,7 +248,7 @@ namespace BlazorConnect4.AIModels
         }
 
 
-        public static void TrainAgents(int iterations, string file)
+        public static void TrainAgents(int iterations, string file, CellColor color)
         {
             Console.WriteLine("Training Agents...");
 
@@ -249,7 +264,7 @@ namespace BlazorConnect4.AIModels
                     ai = new RandomAI()
                 };
 
-                agent = new QAgent(file, game);
+                agent = new QAgent(file, game, color);
 
                 while (game.active)
                 {
@@ -258,6 +273,7 @@ namespace BlazorConnect4.AIModels
                     while (!game.IsValid(move))
                     {
                         // TODO: Lower the QValue from the current action/move.
+                        Console.WriteLine("Invalid move!");
                         move = agent.generator.Next(7);
                     }
 

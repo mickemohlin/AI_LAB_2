@@ -148,11 +148,11 @@ namespace BlazorConnect4.Model
             {
                 if (File.Exists("Data/Q1.bin"))
                 {
-                    ai = new QAgent("Data/Q1.bin", this);
+                    ai = new QAgent("Data/Q1.bin", this, CellColor.Yellow);
                 }
                 else
                 {
-                    ai = new QAgent(this);
+                    ai = new QAgent(this, CellColor.Yellow);
                     ai.ToFile("Data/Q1.bin");
                 }
                 
@@ -173,7 +173,7 @@ namespace BlazorConnect4.Model
             {
                 if (File.Exists("Data/Q1.bin"))
                 {
-                    QAgent.TrainAgents(100, "Data/Q1.bin");
+                    QAgent.TrainAgents(100, "Data/Q1.bin", CellColor.Red);
                 }
                 else
                 {
@@ -183,10 +183,6 @@ namespace BlazorConnect4.Model
             
             //TODO: Extend function.
         }
-
-        
-
-
 
 
         public bool IsValid(int col)
@@ -303,15 +299,17 @@ namespace BlazorConnect4.Model
             return 0;
         }
 
-
-        public void SaveAiData()
+        
+        public void RewardAI(QAgent agent, double reward)
         {
-            QAgent agent = ai as QAgent;
+            agent.UpdateQValue(reward, agent.lastState, agent.lastAction);
+        }
+
+
+        public void SaveAiData(QAgent agent)
+        {
             agent.gamesPlayed += 1;
-
-            Console.WriteLine($"Saving to: {agent.savedFileName}");
-
-            agent.ToFile("Data/Q1.bin");
+            agent.ToFile(agent.savedFileName);
         }
 
 
@@ -328,7 +326,22 @@ namespace BlazorConnect4.Model
                         if (IsWin(col,i))
                         {
                             if (ai.GetType() == typeof(QAgent))
-                                SaveAiData();
+                            {
+                                QAgent agent = ai as QAgent;
+
+                                Console.WriteLine($"AI COLOR: {agent.cellColor}");
+
+                                if (Player == agent.cellColor)
+                                {
+                                    RewardAI(agent, 1);
+                                    SaveAiData(agent);
+                                }
+                                else
+                                {      
+                                    RewardAI(agent, -1);
+                                    SaveAiData(agent);
+                                }
+                            }
 
                             message = Player.ToString() + " Wins";
                             active = false;
@@ -338,8 +351,12 @@ namespace BlazorConnect4.Model
                         if (IsDraw())
                         {
                             if (ai.GetType() == typeof(QAgent))
-                                SaveAiData();
-
+                            {
+                                QAgent agent = ai as QAgent;
+                                RewardAI(agent, 0);
+                                SaveAiData(agent);
+                            }
+                              
                             message = "Draw";
                             active = false;
                             return true;
@@ -349,6 +366,12 @@ namespace BlazorConnect4.Model
                 }
 
                 return PlayNext(); 
+            }
+
+            if (ai.GetType() == typeof(QAgent))
+            {
+                QAgent agent = ai as QAgent;
+                RewardAI(agent, -0.1);
             }
 
             return false;
@@ -370,9 +393,9 @@ namespace BlazorConnect4.Model
             {
                 int move = ai.SelectMove(Board);
 
-                while (! IsValid(move))
+                while (!IsValid(move))
                 {
-                    move = ai.SelectMove(Board);
+                        move = ai.SelectMove(Board);
                 }
 
                 return Play(move);
