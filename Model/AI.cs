@@ -259,9 +259,10 @@ namespace BlazorConnect4.AIModels
                     }
 
                     game.Play(move);
-                    Console.WriteLine("Training finished!");
                 }
             }
+
+            Console.WriteLine("Training finished!");
         }
     }
 
