@@ -111,6 +111,12 @@ namespace BlazorConnect4.Model
             Reset("Human");
         }
 
+        public GameEngine ShallowCopy()
+        {
+            return (GameEngine)MemberwiseClone();
+
+        }
+
 
         // Reset the game and creats the opponent.
         // TODO change the code so new RL agents are created.
@@ -167,7 +173,7 @@ namespace BlazorConnect4.Model
             {
                 if (File.Exists("Data/Q1.bin"))
                 {
-                    QAgent.TrainAgents(10, "Data/Q1.bin");
+                    QAgent.TrainAgents(100, "Data/Q1.bin");
                 }
                 else
                 {
@@ -177,6 +183,9 @@ namespace BlazorConnect4.Model
             
             //TODO: Extend function.
         }
+
+        
+
 
 
 
@@ -295,6 +304,17 @@ namespace BlazorConnect4.Model
         }
 
 
+        public void SaveAiData()
+        {
+            QAgent agent = ai as QAgent;
+            agent.gamesPlayed += 1;
+
+            Console.WriteLine($"Saving to: {agent.savedFileName}");
+
+            agent.ToFile("Data/Q1.bin");
+        }
+
+
         public bool Play(int col)
         {
             if (IsValid(col) && active){
@@ -307,6 +327,9 @@ namespace BlazorConnect4.Model
 
                         if (IsWin(col,i))
                         {
+                            if (ai.GetType() == typeof(QAgent))
+                                SaveAiData();
+
                             message = Player.ToString() + " Wins";
                             active = false;
                             return true;
@@ -314,6 +337,9 @@ namespace BlazorConnect4.Model
 
                         if (IsDraw())
                         {
+                            if (ai.GetType() == typeof(QAgent))
+                                SaveAiData();
+
                             message = "Draw";
                             active = false;
                             return true;
