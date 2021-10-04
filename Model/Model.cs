@@ -45,7 +45,8 @@ namespace BlazorConnect4.Model
 
         public override int GetHashCode()
         {
-            int hash = 0;
+            int hash;
+            string str = "";
 
             for (int col=0; col<=6; col++)
             {
@@ -55,18 +56,20 @@ namespace BlazorConnect4.Model
 
                     if (cell.Color == CellColor.Blank)
                     {
-                        hash += 1 * (row + (7 * col));
+                        str += "0";
                     }
                     else if (cell.Color == CellColor.Red)
                     {
-                        hash += 2 * (row + (7 * col));
+                        str += "1";
                     }
                     else
                     {
-                        hash += 3 * (row + (7 * col));
+                        str += "2";
                     }
                 }
             }
+
+            hash = str.GetHashCode();
 
             return hash;
         }
