@@ -104,6 +104,7 @@ namespace BlazorConnect4.Model
         public bool active;
         public String message;
         public AI ai;
+        string fileName;
 
 
         public GameEngine()
@@ -146,14 +147,17 @@ namespace BlazorConnect4.Model
             }
             else if (playAgainst == "Q1") // Easy AI.
             {
-                if (File.Exists("Data/Q1.bin"))
+                fileName = "Data/Q1.bin";
+
+                if (File.Exists(fileName))
                 {
-                    ai = new QAgent("Data/Q1.bin", this, CellColor.Yellow);
+                    
+                    ai = new QAgent(fileName, this, CellColor.Yellow);
                 }
                 else
                 {
                     ai = new QAgent(this, CellColor.Yellow);
-                    ai.ToFile("Data/Q1.bin");
+                    ai.ToFile(fileName);
                 }
                 
             }
@@ -169,19 +173,47 @@ namespace BlazorConnect4.Model
 
         public void Train(string agent)
         {
+            int trainingRounds = 100;
+
             if (agent == "Q1")
             {
-                if (File.Exists("Data/Q1.bin"))
+                fileName = "Data/Q1.bin";
+
+                if (File.Exists(fileName))
                 {
-                    QAgent.TrainAgents(100, "Data/Q1.bin", CellColor.Red);
+                    QAgent.TrainAgents(trainingRounds, fileName, CellColor.Red);
                 }
                 else
                 {
                     Console.WriteLine("File do not exist!");
                 }
             }
-            
-            //TODO: Extend function.
+            else if (agent == "Q2")
+            {
+                fileName = "Data/Q2.bin";
+
+                if (File.Exists(fileName))
+                {
+                    QAgent.TrainAgents(trainingRounds, fileName, CellColor.Red);
+                }
+                else
+                {
+                    Console.WriteLine("File do not exist!");
+                }
+            }
+            else if (agent == "Q3")
+            {
+                fileName = "Data/Q3.bin";
+
+                if (File.Exists(fileName))
+                {
+                    QAgent.TrainAgents(trainingRounds, fileName, CellColor.Red);
+                }
+                else
+                {
+                    Console.WriteLine("File do not exist!");
+                }
+            }
         }
 
 
@@ -309,7 +341,7 @@ namespace BlazorConnect4.Model
         public void SaveAiData(QAgent agent)
         {
             agent.gamesPlayed += 1;
-            agent.ToFile(agent.savedFileName);
+            agent.ToFile(fileName);
         }
 
 

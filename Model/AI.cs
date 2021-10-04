@@ -137,7 +137,6 @@ namespace BlazorConnect4.AIModels
         {
             int stateOfBoard = board.GetHashCode();
             int move = generator.Next(7); // Default value of move set to a random int between 1 and 7.
-
             
 
             if (QTable.ContainsKey(stateOfBoard))
@@ -154,45 +153,22 @@ namespace BlazorConnect4.AIModels
                 AddNewState(stateOfBoard);
             }
 
-            // 1. Choose action 
-            // 2. Perform action 
-            // 3. Measure Reward
-            // 4. Evalute new QValue
-
             // Remember last state and action.
             lastState = stateOfBoard;
             lastAction = move;
 
-            Console.WriteLine($"Move: {move}");
-
             return move;
-        }
-
-        public double GetReward(int move)
-        {
-            if (!game.IsValid(move))
-                return -0.1;
-            else
-            {
-                int rowPlacement = game.GetCellPlacement(move);
-
-                if (game.IsWin(move, rowPlacement))
-                    return 1.0;
-                else
-                    return 0; // TODO: Check if loss?
-            }
         }
 
         public void UpdateQValue(double reward, int state, int action)
         {
 
-            Console.WriteLine($"reward: {reward}");
+            Console.WriteLine($"AI Reward: {reward}");
 
             double learningRate = 0.9;
             double discountFactor = 0.9;
 
             int newState = game.Board.GetHashCode();
-            Console.WriteLine("Getting new state");
             double maxFutureQValue = CheckBestPossibleAction(newState).actionValue;
 
             double previousQValue = QTable[state][action].actionValue;
@@ -252,8 +228,6 @@ namespace BlazorConnect4.AIModels
         {
             Console.WriteLine("Training Agents...");
 
-            //double epsilon = 0.9;
-
             GameEngine game;
             QAgent agent;
 
@@ -273,7 +247,6 @@ namespace BlazorConnect4.AIModels
                     while (!game.IsValid(move))
                     {
                         // TODO: Lower the QValue from the current action/move.
-                        Console.WriteLine("Invalid move!");
                         move = agent.generator.Next(7);
                     }
 
@@ -281,10 +254,10 @@ namespace BlazorConnect4.AIModels
                 }
 
                 agent.gamesPlayed += 1;
-                agent.ToFile("Data/Q1.bin");
+                agent.ToFile(file);
             }
 
-            Console.WriteLine("Training Finished!");
+            Console.WriteLine("Training Finished!"); 
         }
     }
 
