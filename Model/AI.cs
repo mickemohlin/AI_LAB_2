@@ -30,8 +30,6 @@ namespace BlazorConnect4.AIModels
         // Funktion för att att läsa från fil.
         protected static AI FromFile(string fileName)
         {
-            //Console.WriteLine("Fetching agent from saved file...");
-
             AI returnAI;
             using (Stream stream = File.Open(fileName, FileMode.Open))
             {
@@ -170,7 +168,7 @@ namespace BlazorConnect4.AIModels
 
             double previousQValue = QTable[state][action].actionValue;
 
-            QTable[state][action].actionValue = previousQValue + learningRate * (reward + (discountFactor * QTable[state][action].actionValue) - QTable[state][action].actionValue);
+            QTable[state][action].actionValue = previousQValue + learningRate * (reward + (discountFactor * maxFutureQValue) - QTable[state][action].actionValue);
         }
 
      

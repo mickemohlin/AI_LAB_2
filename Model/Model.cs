@@ -196,7 +196,7 @@ namespace BlazorConnect4.Model
 
         public void Train(string agent)
         {
-            int trainingRounds = 1000;
+            int trainingRounds = 100;
             string trainingAgentFile;
             string opponentAgentFile;
 
