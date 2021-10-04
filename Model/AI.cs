@@ -17,7 +17,8 @@ namespace BlazorConnect4.AIModels
         // Funktion för att skriva till fil.
         public virtual void ToFile(string fileName)
         {
-            Console.WriteLine("Saving data to file...");
+            
+            //Console.WriteLine("Saving data to file...");
 
             using (Stream stream = File.Open(fileName, FileMode.Create))
             {
@@ -29,7 +30,7 @@ namespace BlazorConnect4.AIModels
         // Funktion för att att läsa från fil.
         protected static AI FromFile(string fileName)
         {
-            Console.WriteLine("Fetching agent from saved file...");
+            //Console.WriteLine("Fetching agent from saved file...");
 
             AI returnAI;
             using (Stream stream = File.Open(fileName, FileMode.Open))
@@ -87,7 +88,7 @@ namespace BlazorConnect4.AIModels
     [Serializable]
     public class QAgent : AI
     {
-        [NonSerialized] Random generator;
+        [NonSerialized] public Random generator;
         [NonSerialized] GameEngine game;
         Dictionary<int, List<Action>> QTable;
         public CellColor cellColor;
@@ -95,6 +96,7 @@ namespace BlazorConnect4.AIModels
         public string savedFileName;
         public int rewardAmount;
         public int gamesPlayed;
+        public int totalWins;
         public int lastState;
         public int lastAction;
 
@@ -107,6 +109,7 @@ namespace BlazorConnect4.AIModels
             game = gameEngine;
             gamesPlayed = 0;
             cellColor = color;
+            totalWins = 0;
         }
 
         // Constructor #2
@@ -122,6 +125,7 @@ namespace BlazorConnect4.AIModels
             gamesPlayed = tempAgent.gamesPlayed;
             savedFileName = fileName;
             cellColor = color;
+            totalWins = tempAgent.totalWins;
 
             if (QTable == null)
             {
@@ -129,27 +133,24 @@ namespace BlazorConnect4.AIModels
                 QTable = new Dictionary<int, List<Action>>();
             }
 
-            Console.WriteLine($"Games Played: {gamesPlayed}");
+            //Console.WriteLine($"Games Played: {gamesPlayed}");
         }
-
 
         public override int SelectMove(GameBoard board)
         {
             int stateOfBoard = board.GetHashCode();
-            int move = generator.Next(7); // Default value of move set to a random int between 1 and 7.
-            
+            int move = generator.Next(7);
 
+            // Exploit
             if (QTable.ContainsKey(stateOfBoard))
             {
                 // State exists in QTable --> Choose action with best QValue.
-                Console.WriteLine($"State: {stateOfBoard} exists in QTable!");
                 Action bestPossibleAction = CheckBestPossibleAction(stateOfBoard);
                 move = bestPossibleAction.action;
             }
             else
             {
                 // State do not exist in QTable --> Add new state.
-                Console.WriteLine($"Adding new state: {stateOfBoard} into QTable");
                 AddNewState(stateOfBoard);
             }
 
@@ -157,30 +158,21 @@ namespace BlazorConnect4.AIModels
             lastState = stateOfBoard;
             lastAction = move;
 
-            Console.WriteLine($"Chosen Move: {move}");
-
             return move;
         }
 
         public void UpdateQValue(double reward, int state, int action)
         {
+            double learningRate = 0.20;
+            double discountFactor = 0.1;
 
-            Console.WriteLine($"AI Reward: {reward}");
-
-            double learningRate = 0.9;
-            double discountFactor = 0.9;
-
-            int newState = game.Board.GetHashCode();
-            double maxFutureQValue = CheckBestPossibleAction(newState).actionValue;
-
+            double maxFutureQValue = CheckBestPossibleAction(state).actionValue;
             double previousQValue = QTable[state][action].actionValue;
 
             QTable[state][action].actionValue = previousQValue + learningRate * (reward + (discountFactor * maxFutureQValue) - QTable[state][action].actionValue);
         }
 
-        /*
-         * Returns the best possible move for a given state.
-         */
+     
         public Action CheckBestPossibleAction(int state)
         {
             Action bestAction = new Action(generator.Next(7))
@@ -207,7 +199,6 @@ namespace BlazorConnect4.AIModels
             }
             else
             {
-                Console.WriteLine("State not found!");
                 return bestAction;
             }  
         }
@@ -226,7 +217,7 @@ namespace BlazorConnect4.AIModels
         }
 
 
-        public static void TrainAgents(int iterations, string opponentFile, CellColor color, string trainingAgentFile)
+        public static void TrainAgents(int iterations, string opponentFile, string trainingAgentFile)
         {
             Console.WriteLine("Training Agents...");
 
@@ -235,24 +226,41 @@ namespace BlazorConnect4.AIModels
 
             for (int i = 1; i <= iterations; i++)
             {
+                Console.WriteLine($"Round {i}");
+
                 game = new GameEngine();
 
                 if (opponentFile == "")
                     opponent = new RandomAI();
                 else
-                    opponent = new QAgent(opponentFile, game, CellColor.Yellow); 
+                    opponent = new QAgent(opponentFile, game, CellColor.Red); 
 
-                game.ai = new QAgent(trainingAgentFile, game, color);
+                game.ai = new QAgent(trainingAgentFile, game, CellColor.Yellow);
                 game.fileName = trainingAgentFile;
 
                 while (game.active)
                 {
                     int move = opponent.SelectMove(game.Board);
+
+                    while (!game.IsValid(move))
+                    {
+                        if (opponent.GetType() == typeof(QAgent))
+                        {
+                            // If next move is invalid --> generate new random move.
+                            QAgent agent = opponent as QAgent;
+                            move = agent.generator.Next(7);
+                        }
+                        else
+                        {
+                            move = opponent.SelectMove(game.Board);
+                        }
+
+                    }
+
                     game.Play(move);
+                    Console.WriteLine("Training finished!");
                 }
             }
-
-            Console.WriteLine("Training Finished!"); 
         }
     }
 

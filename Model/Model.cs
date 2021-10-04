@@ -109,7 +109,6 @@ namespace BlazorConnect4.Model
         public AI ai;
         public string fileName;
 
-
         public GameEngine()
         {
             Reset("Human");
@@ -120,7 +119,6 @@ namespace BlazorConnect4.Model
             return (GameEngine)MemberwiseClone();
 
         }
-
 
         // Reset the game and creats the opponent.
         // TODO change the code so new RL agents are created.
@@ -209,11 +207,11 @@ namespace BlazorConnect4.Model
 
                 if (File.Exists(trainingAgentFile))
                 {
-                    QAgent.TrainAgents(trainingRounds, opponentAgentFile, CellColor.Red, trainingAgentFile);
+                    QAgent.TrainAgents(trainingRounds, opponentAgentFile, trainingAgentFile);
                 }
                 else
                 {
-                    Console.WriteLine("File do not exist!");
+                    Console.WriteLine("File do not exist! Please play manually vs Q1 one time before training it.");
                 }
             }
             else if (agent == "Q1 vs Q2")
@@ -223,11 +221,11 @@ namespace BlazorConnect4.Model
 
                 if (File.Exists(trainingAgentFile))
                 {
-                    QAgent.TrainAgents(trainingRounds, opponentAgentFile, CellColor.Red, trainingAgentFile);
+                    QAgent.TrainAgents(trainingRounds, opponentAgentFile, trainingAgentFile);
                 }
                 else
                 {
-                    Console.WriteLine("File do not exist!");
+                    Console.WriteLine("File do not exist! Please play manually vs Q2 one time before training it.");
                 }
             }
             else if (agent == "Q2 vs Q3")
@@ -237,11 +235,11 @@ namespace BlazorConnect4.Model
 
                 if (File.Exists(trainingAgentFile))
                 {
-                    QAgent.TrainAgents(trainingRounds, opponentAgentFile, CellColor.Red, trainingAgentFile);
+                    QAgent.TrainAgents(trainingRounds, opponentAgentFile, trainingAgentFile);
                 }
                 else
                 {
-                    Console.WriteLine("File do not exist!");
+                    Console.WriteLine("File do not exist! Please play manually vs Q3 one time before training it.");
                 }
             }
         }
@@ -391,15 +389,14 @@ namespace BlazorConnect4.Model
                             {
                                 QAgent agent = ai as QAgent;
 
-                                Console.WriteLine($"AI COLOR: {agent.cellColor}");
-
                                 if (Player == agent.cellColor)
                                 {
+                                    agent.totalWins += 1;
                                     RewardAI(agent, 1);
                                     SaveAiData(agent);
                                 }
                                 else
-                                {      
+                                {
                                     RewardAI(agent, -1);
                                     SaveAiData(agent);
                                 }
@@ -457,9 +454,6 @@ namespace BlazorConnect4.Model
 
                 while (!IsValid(move))
                 {
-                    Console.WriteLine($"Invalid Move: {move}");
-                    System.Threading.Thread.Sleep(500);
-
                     if (ai.GetType() == typeof(QAgent))
                     {
                         move = ai.SelectMove(Board);
