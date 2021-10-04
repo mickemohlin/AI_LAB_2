@@ -107,7 +107,7 @@ namespace BlazorConnect4.Model
         public bool active;
         public String message;
         public AI ai;
-        string fileName;
+        public string fileName;
 
 
         public GameEngine()
@@ -166,51 +166,78 @@ namespace BlazorConnect4.Model
             }
             else if (playAgainst == "Q2")
             {
-                ai = new RandomAI(); //TODO: change to medium AI
+                fileName = "Data/Q2.bin";
+
+                if (File.Exists(fileName))
+                {
+
+                    ai = new QAgent(fileName, this, CellColor.Yellow);
+                }
+                else
+                {
+                    ai = new QAgent(this, CellColor.Yellow);
+                    ai.ToFile(fileName);
+                }
             }
             else if (playAgainst == "Q3")
             {
-                ai = new RandomAI(); //TODO: change to hard AI
+                fileName = "Data/Q3.bin";
+
+                if (File.Exists(fileName))
+                {
+
+                    ai = new QAgent(fileName, this, CellColor.Yellow);
+                }
+                else
+                {
+                    ai = new QAgent(this, CellColor.Yellow);
+                    ai.ToFile(fileName);
+                }
             }
         }
 
         public void Train(string agent)
         {
             int trainingRounds = 100;
+            string trainingAgentFile;
+            string opponentAgentFile;
 
-            if (agent == "Q1")
+            if (agent == "Random vs Q1")
             {
-                fileName = "Data/Q1.bin";
+                trainingAgentFile = "Data/Q1.bin";
+                opponentAgentFile = "";
 
-                if (File.Exists(fileName))
+                if (File.Exists(trainingAgentFile))
                 {
-                    QAgent.TrainAgents(trainingRounds, fileName, CellColor.Red);
+                    QAgent.TrainAgents(trainingRounds, opponentAgentFile, CellColor.Red, trainingAgentFile);
                 }
                 else
                 {
                     Console.WriteLine("File do not exist!");
                 }
             }
-            else if (agent == "Q2")
+            else if (agent == "Q1 vs Q2")
             {
-                fileName = "Data/Q2.bin";
+                trainingAgentFile = "Data/Q2.bin";
+                opponentAgentFile = "Data/Q1.bin";
 
-                if (File.Exists(fileName))
+                if (File.Exists(trainingAgentFile))
                 {
-                    QAgent.TrainAgents(trainingRounds, fileName, CellColor.Red);
+                    QAgent.TrainAgents(trainingRounds, opponentAgentFile, CellColor.Red, trainingAgentFile);
                 }
                 else
                 {
                     Console.WriteLine("File do not exist!");
                 }
             }
-            else if (agent == "Q3")
+            else if (agent == "Q2 vs Q3")
             {
-                fileName = "Data/Q3.bin";
+                trainingAgentFile = "Data/Q3.bin";
+                opponentAgentFile = "Data/Q2.bin";
 
-                if (File.Exists(fileName))
+                if (File.Exists(trainingAgentFile))
                 {
-                    QAgent.TrainAgents(trainingRounds, fileName, CellColor.Red);
+                    QAgent.TrainAgents(trainingRounds, opponentAgentFile, CellColor.Red, trainingAgentFile);
                 }
                 else
                 {
@@ -430,7 +457,18 @@ namespace BlazorConnect4.Model
 
                 while (!IsValid(move))
                 {
+                    Console.WriteLine($"Invalid Move: {move}");
+                    System.Threading.Thread.Sleep(500);
+
+                    if (ai.GetType() == typeof(QAgent))
+                    {
                         move = ai.SelectMove(Board);
+                        break;
+                    }
+                    else
+                    {
+                        move = ai.SelectMove(Board);
+                    }
                 }
 
                 return Play(move);

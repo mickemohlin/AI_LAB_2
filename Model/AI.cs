@@ -157,6 +157,8 @@ namespace BlazorConnect4.AIModels
             lastState = stateOfBoard;
             lastAction = move;
 
+            Console.WriteLine($"Chosen Move: {move}");
+
             return move;
         }
 
@@ -224,37 +226,30 @@ namespace BlazorConnect4.AIModels
         }
 
 
-        public static void TrainAgents(int iterations, string file, CellColor color)
+        public static void TrainAgents(int iterations, string opponentFile, CellColor color, string trainingAgentFile)
         {
             Console.WriteLine("Training Agents...");
 
             GameEngine game;
-            QAgent agent;
+            AI opponent;
 
             for (int i = 1; i <= iterations; i++)
             {
-                game = new GameEngine()
-                {
-                    ai = new RandomAI()
-                };
+                game = new GameEngine();
 
-                agent = new QAgent(file, game, color);
+                if (opponentFile == "")
+                    opponent = new RandomAI();
+                else
+                    opponent = new QAgent(opponentFile, game, CellColor.Yellow); 
+
+                game.ai = new QAgent(trainingAgentFile, game, color);
+                game.fileName = trainingAgentFile;
 
                 while (game.active)
                 {
-                    int move = agent.SelectMove(game.Board); // Select best move.
-
-                    while (!game.IsValid(move))
-                    {
-                        // TODO: Lower the QValue from the current action/move.
-                        move = agent.generator.Next(7);
-                    }
-
+                    int move = opponent.SelectMove(game.Board);
                     game.Play(move);
                 }
-
-                agent.gamesPlayed += 1;
-                agent.ToFile(file);
             }
 
             Console.WriteLine("Training Finished!"); 
